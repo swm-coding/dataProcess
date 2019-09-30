@@ -1,12 +1,12 @@
 import re
 import math
+from anytree import *;
 
-# TODO: when getting informations, candidates should be on the same line
 # TODO: process function should calculate points according to data and decide whether to discard post
 
-def getCompany(text):
+def _getCompany(text):
     companyList = [
-        ['삼성'],
+        ['삼성','SAMSUNG'],
         ['LG', '엘지', '엘쥐'],
         ['ASUS','에이수스'],
         ['APPLE','맥','애플','아이맥'],
@@ -19,13 +19,21 @@ def getCompany(text):
         for companyName in companyNames:
             if companyName in text:
                 return companyNames[0]
-    
+                
     return ''
 
-def getCpu(text):
-    return ''
+def _getCpu(text):
+    if "I3" in text:
+        return 'Intel i3'
     
-def getRam(text):
+    if "I5" in text:
+        return 'Intel i5'
+
+    if "I7" in text:
+        return 'Intel i7'
+            
+    
+def _getRam(text):
     text = "\n" + text + "\n"
     ramDeclares = ['램','RAM']
     candidate = []
@@ -60,7 +68,7 @@ def getRam(text):
 
     return sorted(candidate,key=ramSort,reverse=True)[0]
 
-def getSsd(text):
+def _getSsd(text):
     # TODO: discuss whether to seperate ssd hdd
     text = "\n" + text + "\n"
     ssdDeclares = ['스스디','SSD','하드']
@@ -94,8 +102,8 @@ def getSsd(text):
 
     return sorted(candidate,key=ssdSort,reverse=True)[0]
     
-def getDisplay(text):
-    def get_first_nbr_from_str(input_str):
+def _getDisplay(text):
+    def _get_first_nbr_from_str(input_str):
         '''
         :param input_str: strings that contains digit and words
         :return: the number extracted from the input_str
@@ -116,7 +124,7 @@ def getDisplay(text):
         except ValueError:
             return -1.0
 
-    def get_last_nbr_from_str(input_str):
+    def _get_last_nbr_from_str(input_str):
         '''
         :param input_str: strings that contains digit and words
         :return: the number extracted from the input_str
@@ -153,10 +161,10 @@ def getDisplay(text):
         line = text[text.rfind("\n",0,idx)+1:text.find("\n",idx)]
         idx = line.find(Declare)
         
-        post = get_first_nbr_from_str(line[idx:])
+        post = _get_first_nbr_from_str(line[idx:])
         if post != -1:
             candidate.append(post)
-        pre = get_last_nbr_from_str(line[:idx])
+        pre = _get_last_nbr_from_str(line[:idx])
         if pre != -1:
             candidate.append(pre)
 
@@ -167,7 +175,7 @@ def getDisplay(text):
         return -abs(val - 14)
 
     return sorted(candidate,key=displaySort,reverse=True)[0]
-def getf2f(text):
+def _getf2f(text):
 
     if "직거래" in text:
         return 1
@@ -186,21 +194,21 @@ def process(raw_data):
 
     # Data processing
     textUpper = raw_data["text"].upper()
-    db_data["cpu"]     = getCpu(textUpper)
-    db_data["ram"]     = getRam(textUpper)
-    db_data["ssd"]     = getSsd(textUpper)
-    db_data["display"] = getDisplay(textUpper)
+    db_data["cpu"]     = __getCpu(textUpper)
+    db_data["ram"]     = _getRam(textUpper)
+    db_data["ssd"]     = _getSsd(textUpper)
+    db_data["display"] = _getDisplay(textUpper)
 
     cnt = 4
     for value in db_data.values():
         if value == -1 or value == "":
             cnt -= 1
 
-    db_data["company"] = getCompany(textUpper)    
+    db_data["company"] = _getCompany(textUpper)    
 
     db_data["hash"]    = hex(hash(frozenset(db_data.items())))              # TODO: DISCUSS
 
-    db_data["f2f"]     = getf2f(textUpper)
+    db_data["f2f"]     = _getf2f(textUpper)
     db_data["time"]    = raw_data["time"]
     db_data["url"]     = raw_data["url"]
 
